@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Spin Wheel Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎡 Spin the Wheel!</h1>
+<canvas id="wheel" width="400" height="400"></canvas>
+<br>
+<button onclick="spin()">SPIN</button>
+
+<p id="result"></p>
+
+<script>
+const options = [
+  "Win $5",
+  "Try Again",
+  "Bonus Spin",
+  "Lose a Turn",
+  "Win $10",
+  "Mystery Prize"
+];
+
+const colors = [
+  "#FF6384",
+  "#36A2EB",
+  "#FFCE56",
+  "#4BC0C0",
+  "#9966FF",
+  "#FF9F40"
+];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const center = canvas.width / 2;
+const radius = center;
+let angle = 0;
+
+function drawWheel() {
+  const slice = (2 * Math.PI) / options.length;
+  for (let i = 0; i < options.length; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = colors[i];
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, radius, angle + i * slice, angle + (i + 1) * slice);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(angle + (i + 0.5) * slice);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "16px Arial";
+    ctx.fillText(options[i], radius - 10, 5);
+    ctx.restore();
+  }
+}
+
+function spin() {
+  const spinAngle = Math.random() * 2000 + 1000;
+  const spinTime = 3000;
+  const start = performance.now();
+
+  function animate(time) {
+    const elapsed = time - start;
+    if (elapsed < spinTime) {
+      angle += spinAngle / spinTime;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWheel();
+      requestAnimationFrame(animate);
+    } else {
+      finishSpin();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function finishSpin() {
+  const slice = (2 * Math.PI) / options.length;
+  const index = Math.floor((2 * Math.PI - (angle % (2 * Math.PI))) / slice) % options.length;
+  document.getElementById("result").innerText = `🎉 Result: ${options[index]}`;
+}
+
+drawWheel();
+</script>
+
+</body>
+</html>
