@@ -1,524 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NJCSI Spin Wheel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NJCSI Spin & Learn</title>
 
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: #f2f2f2;
-    margin: 0;
-    padding: 24px 12px;
-  }
-
-  h1 { margin: 0 0 16px; }
-
-  #wheel-container {
-    position: relative;
-    width: 400px;
-    margin: 18px auto 20px;
-  }
-
-  canvas {
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-  }
-
-  /* Arrow */
-  .arrow {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-bottom: 30px solid #d00000;
-    z-index: 10;
-  }
-
-  button {
-    padding: 12px 25px;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    background: #1d3557;
-    color: white;
-  }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  /* Overlay */
-  #overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-  }
-
-  #overlay-content {
-    background: white;
-    padding: 22px;
-    width: 100%;
-    max-width: 560px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-  }
-
-  .overlay-section { display: none; }
-
-  .answer-row, .nav-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
-
-  .answer-btn {
-    min-width: 140px;
-    background: #457b9d;
-  }
-
-  .muted {
-    opacity: 0.85;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-
-  .course-card {
-    margin-top: 14px;
-    padding: 14px;
-    border-radius: 10px;
-    background: #f7f7f7;
-    text-align: left;
-  }
-  .course-card strong { display: block; margin-bottom: 6px; }
-  .course-link {
-    display: inline-block;
-    margin-top: 8px;
-    color: #1d3557;
-    text-decoration: underline;
-    font-weight: bold;
-    word-break: break-word;
-  }
-
-  .small-note {
-    margin-top: 10px;
-    font-size: 13px;
-    opacity: 0.8;
-  }
-</style>
+  <!-- ✅ Link to your external stylesheet -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <h1>🎡 NJCSI Spin & Learn</h1>
 
-<h1>🎡 NJCSI Spin & Learn</h1>
-
-<div id="wheel-container">
-  <div class="arrow"></div>
-  <canvas id="wheel" width="400" height="400"></canvas>
-</div>
-
-<button id="spinBtn" onclick="spin()">SPIN</button>
-
-<div id="overlay" role="dialog" aria-modal="true" aria-label="Question Overlay">
-  <div id="overlay-content">
-
-    <!-- QUESTION VIEW -->
-    <div id="questionView" class="overlay-section">
-      <h2 id="overlay-title"></h2>
-      <p id="overlay-question"></p>
-
-      <div class="answer-row">
-        <button class="answer-btn" onclick="answer(true)">True</button>
-        <button class="answer-btn" onclick="answer(false)">False</button>
-      </div>
-
-      <p class="muted">Select an answer to learn more.</p>
-    </div>
-
-    <!-- INFO / FEEDBACK VIEW -->
-    <div id="infoView" class="overlay-section">
-      <h2 id="feedback-title"></h2>
-      <p id="feedback-text"></p>
-
-      <div class="course-card">
-        <strong>Learn more in NJCSI training:</strong>
-        <span id="course-name"></span>
-        <a id="course-link" class="course-link" href="#" target="_blank" rel="noopener" style="display:none;">
-          View course
-        </a>
-      </div>
-
-      <div class="nav-row">
-        <button onclick="backToWheel()">Back to Wheel</button>
-      </div>
-
-      <div class="small-note">
-        For conference engagement and training awareness. Not legal advice.
-      </div>
-    </div>
-
+  <div id="wheel-container">
+    <div class="arrow"></div>
+    <canvas id="wheel" width="400" height="400"></canvas>
   </div>
-</div>
 
-<script>
-/**
- * CONTENT MODEL
- * - Each wedge has 4 questions.
- * - We prevent repeats PER CATEGORY by tracking which question indices have been used.
- * - Once all 4 are used in a category, that category resets and can repeat.
- *
- * You can add courseUrl if you want the "View course" link to show.
- */
+  <button id="spinBtn">SPIN</button>
 
-const wedges = [
-  {
-    label: "Guidelines & Basics",
-    questions: [
-      {
-        question: "True or False: New Jersey uses statewide Child Support Guidelines to help calculate support.",
-        correct: true,
-        explanation: "New Jersey uses statewide guidelines to promote consistency and fairness across cases.",
-        course: "NJ Child Support Guidelines: Foundations",
-        courseUrl: "" // optional
-      },
-      {
-        question: "True or False: Child support automatically ends when a child turns 18 in New Jersey.",
-        correct: false,
-        explanation: "Support may continue beyond age 18 depending on factors such as education status and circumstances.",
-        course: "Emancipation & Support Duration in NJ",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Both parents’ incomes are considered when calculating guideline support.",
-        correct: true,
-        explanation: "Guideline calculations typically consider the incomes of both parents and other relevant factors.",
-        course: "Income Determinations in Child Support Cases",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Child support is intended to cover only food and housing.",
-        correct: false,
-        explanation: "Child support contributes to a child’s overall needs, including housing, food, clothing, and other essentials recognized in guideline models.",
-        course: "What Child Support Covers: Practice & Communication",
-        courseUrl: ""
-      }
-    ]
-  },
-  {
-    label: "Court Process",
-    questions: [
-      {
-        question: "True or False: Child support matters are handled within the Family Division in New Jersey.",
-        correct: true,
-        explanation: "Child support cases are handled within the Family Division of the New Jersey Superior Court.",
-        course: "Child Support Case Flow in the Family Division",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Child support orders can be reviewed and modified when circumstances change.",
-        correct: true,
-        explanation: "A significant change in circumstances may warrant review or modification through appropriate processes.",
-        course: "Modifications: Standards, Documentation, and Practice",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Enforcement is optional once an order is entered.",
-        correct: false,
-        explanation: "There are established enforcement mechanisms to address noncompliance with court orders.",
-        course: "Enforcement Tools & Compliance Strategies",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Clear documentation supports consistent decision-making and case management.",
-        correct: true,
-        explanation: "Accurate, complete documentation helps ensure consistent processing, communication, and outcomes.",
-        course: "Effective Documentation in Child Support Matters",
-        courseUrl: ""
-      }
-    ]
-  },
-  {
-    label: "Common Myths",
-    questions: [
-      {
-        question: "True or False: Parents can ignore a court order if they have an informal agreement.",
-        correct: false,
-        explanation: "Court orders govern child support obligations. Informal agreements do not replace an order.",
-        course: "Addressing Informal Agreements & Order Compliance",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Parenting time and child support are the same legal issue.",
-        correct: false,
-        explanation: "Parenting time and child support are separate issues, even though families often experience them together.",
-        course: "Communicating the Difference: Support vs. Parenting Time",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Only one parent has responsibilities under child support law.",
-        correct: false,
-        explanation: "Child support frameworks recognize parental responsibilities and financial considerations across both parents.",
-        course: "Shared Responsibilities in Support Determinations",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Child support cases are identical from family to family.",
-        correct: false,
-        explanation: "Cases vary based on individual circumstances, documentation, and case-specific factors.",
-        course: "Applying Guidelines to Real-World Case Variations",
-        courseUrl: ""
-      }
-    ]
-  },
-  {
-    label: "Working with Families",
-    questions: [
-      {
-        question: "True or False: Child support is intended to benefit the custodial parent.",
-        correct: false,
-        explanation: "Child support is intended to benefit the child by contributing to the child’s needs.",
-        course: "How to Explain Child Support Purpose to Participants",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Many participants misunderstand how child support amounts are determined.",
-        correct: true,
-        explanation: "Guidelines and case factors can be confusing; clear explanations help reduce frustration and conflict.",
-        course: "Plain-Language Communication in Child Support",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Consistent, respectful communication can reduce conflict in child support matters.",
-        correct: true,
-        explanation: "Clarity and professionalism help participants understand process, expectations, and next steps.",
-        course: "De-escalation & Communication Strategies",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Child support professionals routinely work with diverse families and complex barriers.",
-        correct: true,
-        explanation: "Cases often involve varied circumstances; awareness and consistency support fair process.",
-        course: "Serving Diverse Participants: Practice Considerations",
-        courseUrl: ""
-      }
-    ]
-  },
-  {
-    label: "Training & Practice",
-    questions: [
-      {
-        question: "True or False: Ongoing training helps professionals keep pace with policy, procedure, and best practices.",
-        correct: true,
-        explanation: "Training supports consistency, accuracy, and confidence in practice as expectations and tools evolve.",
-        course: "Continuous Learning in Child Support Practice",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Scenario-based learning helps adult learners apply policy to real situations.",
-        correct: true,
-        explanation: "Scenarios help bridge policy knowledge to day-to-day decision-making and communication.",
-        course: "Scenario-Based Training for Child Support Professionals",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Consistent statewide training can support more uniform practice across counties.",
-        correct: true,
-        explanation: "Shared training promotes common language and expectations across teams and locations.",
-        course: "Statewide Consistency: Standards & Practice Alignment",
-        courseUrl: ""
-      },
-      {
-        question: "True or False: Professional development improves outcomes for children and families by strengthening practice.",
-        correct: true,
-        explanation: "High-quality practice supports timely, accurate, and respectful processes that affect real families.",
-        course: "Professional Practice & Family Impact",
-        courseUrl: ""
-      }
-    ]
-  }
-];
+  <!-- Overlay (modal) for question + feedback -->
+  <div id="overlay" role="dialog" aria-modal="true" aria-label="Question Overlay">
+    <div id="overlay-content">
 
-const colors = ["#e63946","#457b9d","#2a9d8f","#f4a261","#6d597a","#ffb703"];
+      <!-- QUESTION VIEW -->
+      <div id="questionView" class="overlay-section">
+        <h2 id="overlay-title"></h2>
+        <p id="overlay-question"></p>
 
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const center = canvas.width / 2;
-const radius = center;
+        <div class="answer-row">
+          <button class="answer-btn" id="trueBtn">True</button>
+          <button class="answer-btn" id="falseBtn">False</button>
+        </div>
 
-let angle = 0;
-let spinning = false;
+        <p class="muted">Select an answer to learn more.</p>
+      </div>
 
-// Current selection
-let currentWedge = null;
-let currentQuestion = null;
+      <!-- INFO / FEEDBACK VIEW -->
+      <div id="infoView" class="overlay-section">
+        <h2 id="feedback-title"></h2>
+        <p id="feedback-text"></p>
 
-// Prevent repeats per category: label -> Set(indices used)
-const usedQuestionIndicesByCategory = new Map();
+        <div class="course-card">
+          <strong>Learn more in NJCSI training:</strong>
+          <span id="course-name"></span>
 
-function getUsedSetForCategory(label) {
-  if (!usedQuestionIndicesByCategory.has(label)) {
-    usedQuestionIndicesByCategory.set(label, new Set());
-  }
-  return usedQuestionIndicesByCategory.get(label);
-}
+          <!-- Optional course link (only shown if courseUrl exists) -->
+          <a id="course-link" class="course-link" href="#" target="_blank" rel="noopener" style="display:none;">
+            View course
+          </a>
+        </div>
 
-function pickNonRepeatingQuestion(wedge) {
-  const used = getUsedSetForCategory(wedge.label);
+        <div class="nav-row">
+          <button id="backBtn">Back to Wheel</button>
+        </div>
 
-  // If we've used them all, reset for this category
-  if (used.size >= wedge.questions.length) {
-    used.clear();
-  }
+        <div class="small-note">
+          For conference engagement and training awareness. Not legal advice.
+        </div>
+      </div>
 
-  // Pick an unused index
-  const available = [];
-  for (let i = 0; i < wedge.questions.length; i++) {
-    if (!used.has(i)) available.push(i);
-  }
+    </div>
+  </div>
 
-  const idx = available[Math.floor(Math.random() * available.length)];
-  used.add(idx);
-  return wedge.questions[idx];
-}
-
-function drawWheel() {
-  const slice = (2 * Math.PI) / wedges.length;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < wedges.length; i++) {
-    ctx.beginPath();
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.moveTo(center, center);
-    ctx.arc(center, center, radius, angle + i * slice, angle + (i + 1) * slice);
-    ctx.fill();
-
-    ctx.save();
-    ctx.translate(center, center);
-    ctx.rotate(angle + (i + 0.5) * slice);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
-    ctx.font = "16px Arial";
-    ctx.fillText(wedges[i].label, radius - 10, 5);
-    ctx.restore();
-  }
-}
-
-function spin() {
-  if (spinning) return;
-  spinning = true;
-
-  // Disable spin while spinning
-  document.getElementById("spinBtn").disabled = true;
-
-  const spinAngle = Math.random() * 3000 + 2000;
-  const spinTime = 3500;
-  const start = performance.now();
-
-  function animate(time) {
-    const elapsed = time - start;
-
-    if (elapsed < spinTime) {
-      angle += spinAngle / spinTime;
-      drawWheel();
-      requestAnimationFrame(animate);
-    } else {
-      finishSpin();
-    }
-  }
-
-  requestAnimationFrame(animate);
-}
-
-function finishSpin() {
-  const slice = (2 * Math.PI) / wedges.length;
-
-  // normalized so index aligns with arrow at top
-  const normalizedAngle = (2 * Math.PI - (angle % (2 * Math.PI)));
-  const index = Math.floor(normalizedAngle / slice) % wedges.length;
-
-  currentWedge = wedges[index];
-  currentQuestion = pickNonRepeatingQuestion(currentWedge);
-
-  showQuestion(currentWedge, currentQuestion);
-
-  spinning = false;
-  document.getElementById("spinBtn").disabled = false;
-}
-
-function showOverlay() {
-  document.getElementById("overlay").style.display = "flex";
-}
-
-function showSection(sectionId) {
-  document.getElementById("questionView").style.display = "none";
-  document.getElementById("infoView").style.display = "none";
-  document.getElementById(sectionId).style.display = "block";
-}
-
-function showQuestion(wedge, questionObj) {
-  document.getElementById("overlay-title").innerText = wedge.label;
-  document.getElementById("overlay-question").innerText = questionObj.question;
-
-  showSection("questionView");
-  showOverlay();
-}
-
-function answer(userAnswer) {
-  const isCorrect = userAnswer === currentQuestion.correct;
-
-  // Header changes based on correctness
-  document.getElementById("feedback-title").innerText =
-    isCorrect ? "✅ Correct!" : "ℹ️ Let’s Take a Closer Look";
-
-  // Same info screen either way; body differs
-  document.getElementById("feedback-text").innerText =
-    isCorrect
-      ? "Nice work! Want to go deeper? This topic is covered in NJCSI training."
-      : currentQuestion.explanation + " Want to explore this further? NJCSI training covers this topic in detail.";
-
-  // Course CTA
-  document.getElementById("course-name").innerText = currentQuestion.course || "NJCSI Training";
-
-  const linkEl = document.getElementById("course-link");
-  if (currentQuestion.courseUrl && currentQuestion.courseUrl.trim() !== "") {
-    linkEl.href = currentQuestion.courseUrl;
-    linkEl.style.display = "inline-block";
-  } else {
-    linkEl.href = "#";
-    linkEl.style.display = "none";
-  }
-
-  showSection("infoView");
-}
-
-function backToWheel() {
-  document.getElementById("overlay").style.display = "none";
-  currentWedge = null;
-  currentQuestion = null;
-}
-
-// Optional: click outside modal closes it (comment out if you prefer locked kiosk flow)
-document.getElementById("overlay").addEventListener("click", (e) => {
-  if (e.target.id === "overlay") backToWheel();
-});
-
-drawWheel();
-</script>
-
+  <!-- ✅ Link to your external JavaScript (use defer so DOM exists before script runs) -->
+  <script src="script.js" defer></script>
 </body>
 </html>
