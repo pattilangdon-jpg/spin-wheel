@@ -338,6 +338,27 @@ function pickNonRepeatingQuestion(wedge) {
 
   return wedge.questions[idx];
 }
+/**
+ * Determines whether black or white text will have better contrast
+ * against a given hex color.
+ * Returns "#000000" or "#FFFFFF"
+ */
+function getContrastingTextColor(hexColor) {
+  // Remove leading #
+  const hex = hexColor.replace("#", "");
+
+  // Convert hex to RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Calculate luminance (perceived brightness)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+
+  // Threshold: tweak if needed (140–160 are common)
+  return luminance > 150 ? "#000000" : "#FFFFFF";
+}
+
 
 /* =========================
    DRAW THE WHEEL
@@ -362,7 +383,8 @@ function drawWheel() {
     ctx.translate(center, center);
     ctx.rotate(angle + (i + 0.5) * slice);
     ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = getContrastingTextColor(colors[i % colors.length]);
+
     ctx.font = `${fontSize}px Arial`;
     ctx.fillText(wedges[i].label, radius - 25, 5);
     ctx.restore();
