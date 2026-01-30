@@ -242,6 +242,18 @@ const SPIN_ANGLE_MIN = 100;   // lower = fewer total degrees of rotation
 const SPIN_ANGLE_MAX = 500;   // lower = fewer total degrees of rotation
 
 /* =========================
+   ANSWER LABEL CONFIG
+   =========================
+   Change these labels without touching logic.
+   The values MUST map to true/false internally.
+*/
+const ANSWER_LABELS = {
+  true: "Fact",
+  false: "Fiction"
+};
+
+
+/* =========================
    DOM REFERENCES
    ========================= */
 const canvas = document.getElementById("wheel");
@@ -260,6 +272,9 @@ const overlayQuestion = document.getElementById("overlay-question");
 
 const trueBtn = document.getElementById("trueBtn");
 const falseBtn = document.getElementById("falseBtn");
+trueBtn.innerText = ANSWER_LABELS.true;
+falseBtn.innerText = ANSWER_LABELS.false;
+
 
 const feedbackTitle = document.getElementById("feedback-title");
 const feedbackText = document.getElementById("feedback-text");
