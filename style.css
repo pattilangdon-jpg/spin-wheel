@@ -19,7 +19,7 @@ h1 {
 #wheel-container {
   position: relative;
   width: 400px;
-  margin: 18px auto 20px;
+  margin: 60px auto 20px;
 }
 
 canvas {
@@ -31,14 +31,14 @@ canvas {
 /* Arrow pointer at the top */
 .arrow {
   position: absolute;
-  top: -10px;
+  top: -30px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-bottom: 30px solid #d00000;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 70px solid #5f6a72;
   z-index: 10;
 }
 
