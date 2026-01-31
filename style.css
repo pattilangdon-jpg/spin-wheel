@@ -108,7 +108,7 @@ button:disabled {
 
   background-color: #CC0033;   /* Rutgers Scarlet */
   color: #FFFFFF;
-
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   border: none;
   border-radius: 14px;
 
