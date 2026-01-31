@@ -2,13 +2,36 @@
    Base Page Styles
    ========================= */
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  background: #f2f2f2;
+  position: relative;
+  min-height: 100vh;
+  font-family: Arial, system-ui, sans-serif;
+  background: #f6f7f8; /* fallback */
   margin: 0;
   padding: 24px 12px;
+  overflow-x: hidden;
 }
 
+/* Background image layer */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+
+  background-image: url("images/boardwalkWithFarrisWheel.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  opacity: 0.25;            /* 👈 adjust this (0.15–0.35 works well) */
+  z-index: -1;              /* keeps it behind everything */
+}
+/* ✅ Center the main content and keep it centered */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centers title/button/wheel */
+  gap: 16px;
+}
 h1 {
   margin: 0 0 16px;
 }
@@ -18,10 +41,17 @@ h1 {
    ========================= */
 #wheel-container {
   position: relative;
-  width: 400px;
+  /* 80vh target; capped by width */
+  width: min(70vh, 90vw);
+  height: min(70vh, 90vw);
   margin: 60px auto 20px;
 }
-
+/* Make canvas fill the container */
+#wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
 canvas {
   background: white;
   border-radius: 50%;

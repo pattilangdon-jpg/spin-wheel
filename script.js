@@ -380,31 +380,62 @@ function getContrastingTextColor(hexColor) {
    ========================= */
 
 function drawWheel() {
-   const slice = (2 * Math.PI) / wedges.length;
+  const slice = (2 * Math.PI) / wedges.length;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const fontSize = Math.max(12, Math.min(16, Math.floor(220 / wedges.length)));
+
   for (let i = 0; i < wedges.length; i++) {
-    // Draw wedge
+    // 🔹 DEFINE ANGLES FIRST (this is critical)
+    const startAngle = angle + i * slice;
+    const endAngle = startAngle + slice;
+    const midAngle = startAngle + slice / 2;
+
+    /* -------- Draw wedge -------- */
     ctx.beginPath();
-    ctx.fillStyle = colors[i % colors.length];
     ctx.moveTo(center, center);
-    ctx.arc(center, center, radius, angle + i * slice, angle + (i + 1) * slice);
+    ctx.arc(center, center, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
 
-    // Draw label (auto-size based on wedge count)
-    const fontSize = Math.max(12, Math.min(16, Math.floor(220 / wedges.length)));
+    /* -------- Divider line between wedges -------- */
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(95,106,114,0.4)"; // Rutgers gray
+    ctx.lineWidth = 6;
+    ctx.moveTo(center, center);
+    ctx.lineTo(
+      center + radius * Math.cos(startAngle),
+      center + radius * Math.sin(startAngle)
+    );
+    ctx.stroke();
+    ctx.restore();
+
+    /* -------- Centered label -------- */
+    const textRadius = radius * 0.6;
 
     ctx.save();
     ctx.translate(center, center);
-    ctx.rotate(angle + (i + 0.5) * slice);
-    ctx.textAlign = "right";
-    ctx.fillStyle = getContrastingTextColor(colors[i % colors.length]);
-
+    ctx.rotate(midAngle);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.font = `${fontSize}px Arial`;
-    ctx.fillText(wedges[i].label, radius - 25, 5);
+    ctx.fillStyle = getContrastingTextColor(colors[i % colors.length]);
+    ctx.fillText(wedges[i].label, textRadius, 0);
     ctx.restore();
   }
+
+  /* -------- Outer border -------- */
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = "#5F6A72";
+  ctx.lineWidth = 10;
+  ctx.arc(center, center, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
+
 
 /* =========================
    SPIN LOGIC
