@@ -42,8 +42,8 @@ h1 {
 #wheel-container {
   position: relative;
   /* 80vh target; capped by width */
-  width: min(70vh, 90vw);
-  height: min(70vh, 90vw);
+  width: min(60vh, 90vw);
+  height: min(60vh, 90vw);
   margin: 60px auto 20px;
 }
 /* Make canvas fill the container */
@@ -95,6 +95,43 @@ button:disabled {
   min-width: 140px;
   background: #457b9d;
 }
+/* =========================
+   Primary Spin Button
+   ========================= */
+#spinBtn {
+  margin-top: 20px;
+
+  padding: 18px 48px;          /* ⬅️ bigger click target */
+  font-size: 22px;             /* ⬅️ more presence */
+  font-weight: bold;
+  letter-spacing: 1px;
+
+  background-color: #CC0033;   /* Rutgers Scarlet */
+  color: #FFFFFF;
+
+  border: none;
+  border-radius: 14px;
+
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease;
+}
+
+/* Hover state */
+#spinBtn:hover {
+  background-color: #5F6A72;   /* Rutgers Gray */
+}
+
+/* Optional: subtle press effect (feels great on touchscreens) */
+#spinBtn:active {
+  transform: scale(0.97);
+}
+
+/* Disabled state (while spinning) */
+#spinBtn:disabled {
+  background-color: #A0A0A0;
+  cursor: not-allowed;
+}
+
 
 /* =========================
    Overlay / Modal
