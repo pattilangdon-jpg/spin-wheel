@@ -258,8 +258,8 @@ const ANSWER_LABELS = {
    ========================= */
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
-const center = canvas.width / 2;
-const radius = center;
+let center = canvas.width / 2;
+let radius = center;
 
 const spinBtn = document.getElementById("spinBtn");
 const overlay = document.getElementById("overlay");
@@ -269,6 +269,8 @@ const infoView = document.getElementById("infoView");
 
 const overlayTitle = document.getElementById("overlay-title");
 const overlayQuestion = document.getElementById("overlay-question");
+
+const WHEEL_PADDING = 20;
 
 const trueBtn = document.getElementById("trueBtn");
 const falseBtn = document.getElementById("falseBtn");
@@ -522,19 +524,28 @@ function spin() {
 function finishSpin() {
   const slice = (2 * Math.PI) / wedges.length;
 
-  // Normalize the angle so "top arrow" selection feels correct
-  const normalizedAngle = (2 * Math.PI - (angle % (2 * Math.PI)));
-  const index = Math.floor(normalizedAngle / slice) % wedges.length;
+  // Canvas 0 rad is at 3 o'clock. Our arrow is at 12 o'clock (-90°).
+  // We want the angle that is pointing straight up, adjusted by current rotation.
+  const pointerAngle = (3 * Math.PI / 2); // 12 o'clock in [0, 2π) terms
+
+  // Normalize current wheel rotation into [0, 2π)
+  const normalized = ((angle % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+
+  // Compute which wedge is under the pointer
+  // We subtract wheel rotation from pointer position to get "wheel space"
+  const wheelSpaceAngle = (pointerAngle - normalized + (2 * Math.PI)) % (2 * Math.PI);
+
+  const index = Math.floor(wheelSpaceAngle / slice) % wedges.length;
 
   currentWedge = wedges[index];
   currentQuestion = pickNonRepeatingQuestion(currentWedge);
 
   showQuestion(currentWedge, currentQuestion);
 
-  // Re-enable button
   spinning = false;
   spinBtn.disabled = false;
 }
+
 
 /* =========================
    OVERLAY FLOW
@@ -582,6 +593,21 @@ function backToWheel() {
   currentWedge = null;
   currentQuestion = null;
 }
+function resizeCanvasToContainer() {
+  const container = document.getElementById("wheel-container");
+  const rect = container.getBoundingClientRect();
+
+  // Set the canvas pixel size to match the CSS size
+  canvas.width = Math.floor(rect.width);
+  canvas.height = Math.floor(rect.height);
+
+  // Recompute geometry based on new size
+  // IMPORTANT: these were const before; change them to let variables
+  center = canvas.width / 2;
+  radius = center - WHEEL_PADDING;
+
+  drawWheel();
+}
 
 /* =========================
    EVENT LISTENERS
@@ -599,7 +625,9 @@ overlay.addEventListener("click", (e) => {
   if (e.target === overlay) backToWheel();
 });
 
+
 /* =========================
    INIT
    ========================= */
 drawWheel();
+
