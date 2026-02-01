@@ -285,6 +285,135 @@ const courseName = document.getElementById("course-name");
 const courseLink = document.getElementById("course-link");
 
 const backBtn = document.getElementById("backBtn");
+/* =========================
+   AUDIO (Background + SFX)
+   ========================= */
+
+// Update these paths to match your files
+const AUDIO_FILES = {
+  bgm: "audio/background.mp3",
+  cheer: "audio/cheer.mp3"
+};
+
+const audio = {
+  bgm: new Audio(AUDIO_FILES.bgm),
+  cheer: new Audio(AUDIO_FILES.cheer),
+  unlocked: false,
+  muted: false
+};
+
+// Background music settings
+audio.bgm.loop = true;
+audio.bgm.volume = 0.22;      // 0.0 to 1.0 (keep low under voice)
+audio.bgm.preload = "auto";
+
+// Cheer settings
+audio.cheer.volume = 0.95;
+audio.cheer.preload = "auto";
+
+/**
+ * Unlock audio and start background music.
+ * Call this from a user gesture (click/tap), e.g., the Spin button click.
+ */
+// async function startBackgroundMusic() {
+//   if (audio.unlocked) return;
+
+//   try {
+//     // Attempt to play; if it works, audio is "unlocked"
+//     await audio.bgm.play();
+//     audio.unlocked = true;
+//   } catch (err) {
+//     // If blocked, leave it locked; user can tap again
+//     console.warn("Background music blocked until user interaction.", err);
+//   }
+// }
+/** Try to unlock audio (must be called from a user gesture). */
+async function unlockAudio() {
+  if (audio.unlocked) return true;
+
+  try {
+    // A play/pause sequence often unlocks reliably across browsers
+    await audio.bgm.play();
+    audio.bgm.pause();
+    audio.bgm.currentTime = 0;
+
+    audio.unlocked = true;
+    return true;
+  } catch (err) {
+    console.warn("Audio still blocked until a user interaction.", err);
+    return false;
+  }
+}
+
+function applyMuteState() {
+  audio.bgm.muted = audio.muted;
+  audio.cheer.muted = audio.muted;
+}
+const muteBtn = document.getElementById("muteBtn");
+
+function updateSoundButtonUI() {
+  if (audio.muted || audio.bgm.paused) {
+    muteBtn.textContent = "🔇 Sound Off";
+  } else {
+    muteBtn.textContent = "🔊 Sound On";
+  }
+}
+
+muteBtn.addEventListener("click", async () => {
+  const ok = await unlockAudio();
+  if (!ok) return;
+
+  // Toggle sound state: if music is playing -> pause; if paused -> play
+  if (!audio.bgm.paused && !audio.muted) {
+    audio.bgm.pause();
+  } else {
+    audio.muted = false;      // ensure not muted when turning on
+    applyMuteState();
+    try {
+      await audio.bgm.play();
+    } catch (err) {
+      console.warn("Could not start background music.", err);
+    }
+  }
+
+  updateSoundButtonUI();
+});
+
+// Initialize button label
+applyMuteState();
+updateSoundButtonUI();
+
+/**
+ * Play cheer SFX (safe even if bgm is running).
+ * Resets to start so it can fire repeatedly.
+ */
+function playCheer() {
+  if (!audio.unlocked || audio.muted) return;
+
+  const originalVol = audio.bgm.volume;
+
+  // Duck background music if it’s playing
+  if (!audio.bgm.paused) {
+    audio.bgm.volume = Math.max(0, originalVol * 0.25);
+  }
+
+  audio.cheer.currentTime = 0;
+  audio.cheer.play().catch(() => {});
+
+  const restore = () => {
+    audio.bgm.volume = originalVol;
+    audio.cheer.removeEventListener("ended", restore);
+  };
+
+  audio.cheer.addEventListener("ended", restore);
+
+  // Fallback restore (in case "ended" doesn't fire)
+  setTimeout(() => {
+    audio.bgm.volume = originalVol;
+  }, 2000);
+}
+
+
 
 /* =========================
    STATE
@@ -475,6 +604,7 @@ function easeOutCubic(t) {
 }
 
 function spin() {
+  //startBackgroundMusic(); // starts looping bg music after first tap/click
   if (spinning) return;
   spinning = true;
   spinBtn.disabled = true;
@@ -567,7 +697,9 @@ function showQuestion(wedge, q) {
  */
 function answer(userAnswer) {
   const isCorrect = userAnswer === currentQuestion.correct;
-
+ if (isCorrect) {
+    playCheer(); // ✅ cheering for correct answers
+  }
   feedbackTitle.innerText = isCorrect ? "✅ Correct!" : "ℹ️ Let’s Take a Closer Look";
 
   feedbackText.innerText = isCorrect
@@ -625,6 +757,30 @@ overlay.addEventListener("click", (e) => {
   if (e.target === overlay) backToWheel();
 });
 
+// const muteBtn = document.getElementById("muteBtn");
+// let muted = false;
+
+// function setMuted(state) {
+//   muted = state;
+//   audio.bgm.muted = muted;
+//   audio.cheer.muted = muted;
+//   muteBtn.textContent = muted ? "🔇 Muted" : "🔊 Sound";
+// }
+
+// muteBtn.addEventListener("click", async () => {
+//   // Ensure audio is unlocked by user gesture
+//   await startBackgroundMusic();
+
+//   setMuted(!muted);
+
+//   // If unmuting and bgm was paused/blocked, try playing again
+//   if (!muted && audio.bgm.paused) {
+//     try { await audio.bgm.play(); } catch {}
+//   }
+// });
+
+// // Default state
+// setMuted(false);
 
 /* =========================
    INIT
